@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image to Text</title>
+</head>
+<body>
+    <h1>Upload an Image</h1>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <input type="file" name="file" accept="image/*">
+        <input type="submit" value="Upload">
+    </form>
+    <h2>Extracted Text:</h2>
+    <textarea rows="10" cols="50" readonly>{{ extracted_text }}</textarea>
+</body>
+</html>
