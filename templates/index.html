@@ -8,25 +8,54 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
             margin: 0;
             padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            background: 
+                linear-gradient(135deg, #ee7752, #e73c7e) top left,
+                linear-gradient(225deg, #e73c7e, #23a6d5) top right,
+                linear-gradient(315deg, #23a6d5, #23d5ab) bottom right,
+                linear-gradient(45deg, #23d5ab, #ee7752) bottom left;
+            background-size: 50% 50%;
+            background-repeat: no-repeat;
+            animation: gradientAnimation 15s ease infinite;
         }
+        
+        @keyframes gradientAnimation {
+            0% {
+                background-position: 0% 0%, 100% 0%, 100% 100%, 0% 100%;
+            }
+            25% {
+                background-position: 100% 0%, 100% 100%, 0% 100%, 0% 0%;
+            }
+            50% {
+                background-position: 100% 100%, 0% 100%, 0% 0%, 100% 0%;
+            }
+            75% {
+                background-position: 0% 100%, 0% 0%, 100% 0%, 100% 100%;
+            }
+            100% {
+                background-position: 0% 0%, 100% 0%, 100% 100%, 0% 100%;
+            }
+        }
+        
+        
         .container {
             max-width: 400px;
             padding: 20px;
-            background-color: #fff;
             border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(50px) brightness(100%);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2), 0 0 40px rgba(255, 255, 255, 0.1), inset 0 0 40px rgba(255, 255, 255, 0.1);
             display: flex;
             justify-content: center;
             align-items: center;
-            flex-direction: column; /* Added */
+            flex-direction: column;
         }
+        
+        
         h1 {
             text-align: center;
             margin-bottom: 20px;
@@ -53,17 +82,22 @@
             display: none;
         }
         .file-label {
-            display: flex;
+            display: none;
             justify-content: center;
             align-items: center;
             text-align: center;
             margin-top: 10px;
-            height: 30px; /* Adjust this value as needed to center vertically */
+            height: 30px; 
+            margin-bottom: 10px;
         }
         .preview {
             max-width: 100%;
-            max-height: 200px; /* Adjust this value as needed */
+            max-height: 200px; 
             margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        .preview-container {
+            display: none; /* Initially hidden */
         }
     </style>
 </head>
@@ -85,14 +119,17 @@
         const fileInput = document.getElementById('file-upload');
         const fileLabel = document.querySelector('.file-label');
         const imagePreview = document.getElementById('image-preview'); // Added
-
+        const previewContainer = document.querySelector('.preview-container');
         fileInput.addEventListener('change', function() {
             const file = fileInput.files[0];
             if (file) {
+                fileLabel.style.display = "flex";
+                previewContainer.style.display = 'block';
                 fileLabel.textContent = file.name;
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     imagePreview.src = e.target.result;
+
                 }
                 reader.readAsDataURL(file);
             } else {
