@@ -62,6 +62,6 @@ def result():
     response = model.generate_content(extracted_text)
     response_text = response.text
     formatted_text = to_string(response_text)
-    return render_template('result.html', extracted_text=formatted_text)
+    return render_template('result.html', extracted_text=formatted_text, prompt = extracted_text)
 if __name__ == '__main__':
     app.run(debug=True)
