@@ -2,9 +2,19 @@ from flask import Flask, render_template, request, redirect, url_for
 import cv2
 import numpy as np
 import pytesseract
+import pathlib
+import textwrap
+
+import google.generativeai as genai
+
+from IPython.display import display
+from IPython.display import Markdown
 
 app = Flask(__name__)
 
+GOOGLE_API_KEY= 'AIzaSyA95IplUbXmblGL_nrEv4dXR69zNY7bhnE'
+
+genai.configure(api_key=GOOGLE_API_KEY)
 # Mention the installed location of Tesseract-OCR in your system
 pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
 
@@ -40,13 +50,17 @@ def index():
             extracted_text = extract_text_from_image(image)
             # Redirect to the result page with the extracted text
             return redirect(url_for('result', extracted_text=extracted_text))
-    # Render the upload form
     return render_template('index.html')
-
+def to_string(text):
+    text = text.replace('•', '*')
+    return textwrap.indent(text, '> ', predicate=lambda _: True)
 @app.route('/result')
 def result():
     extracted_text = request.args.get('extracted_text', '')
-    return render_template('result.html', extracted_text=extracted_text)
-
+    model = genai.GenerativeModel('gemini-pro')
+    response = model.generate_content("What is Javascript")
+    response_text = response.text
+    formatted_text = to_string(response_text)
+    return render_template('result.html', extracted_text=formatted_text)
 if __name__ == '__main__':
     app.run(debug=True)
