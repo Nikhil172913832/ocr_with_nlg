@@ -53,12 +53,13 @@ def index():
     return render_template('index.html')
 def to_string(text):
     text = text.replace('•', '*')
-    return textwrap.indent(text, '> ', predicate=lambda _: True)
+    text = text.replace('*', '')
+    return textwrap.indent(text, '', predicate=lambda _: True)
 @app.route('/result')
 def result():
     extracted_text = request.args.get('extracted_text', '')
     model = genai.GenerativeModel('gemini-pro')
-    response = model.generate_content("What is Javascript")
+    response = model.generate_content(extracted_text)
     response_text = response.text
     formatted_text = to_string(response_text)
     return render_template('result.html', extracted_text=formatted_text)
