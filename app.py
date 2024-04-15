@@ -1,38 +1,52 @@
-from flask import Flask, render_template, request
-import pytesseract
-from PIL import Image
-import os
+from flask import Flask, render_template, request, redirect, url_for
 import cv2
+import numpy as np
+import pytesseract
 
 app = Flask(__name__)
 
-UPLOAD_FOLDER = 'statics'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# Mention the installed location of Tesseract-OCR in your system
+pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
 
-@app.route('/')
+def extract_text_from_image(image):
+    # Preprocessing the image starts
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    ret, thresh1 = cv2.threshold(gray, 0, 255, cv2.THRESH_OTSU | cv2.THRESH_BINARY_INV)
+    rect_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (18, 18))
+    dilation = cv2.dilate(thresh1, rect_kernel, iterations=1)
+    contours, hierarchy = cv2.findContours(dilation, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    extracted_text = ""
+    for cnt in contours:
+        x, y, w, h = cv2.boundingRect(cnt)
+        cropped = image[y:y + h, x:x + w]
+        text = pytesseract.image_to_string(cropped)
+        extracted_text += text + "\n"
+    return extracted_text
+
+@app.route('/', methods=['GET', 'POST'])
 def index():
+    if request.method == 'POST':
+        # Check if a file was uploaded
+        if 'file' not in request.files:
+            return redirect(request.url)
+        file = request.files['file']
+        # If no file is selected
+        if file.filename == '':
+            return redirect(request.url)
+        if file:
+            # Read the image file
+            image = cv2.imdecode(np.frombuffer(file.read(), np.uint8), cv2.IMREAD_COLOR)
+            # Extract text from the image
+            extracted_text = extract_text_from_image(image)
+            # Redirect to the result page with the extracted text
+            return redirect(url_for('result', extracted_text=extracted_text))
+    # Render the upload form
     return render_template('index.html')
 
-@app.route('/upload', methods=['POST'])
-def upload():
-    if 'file' not in request.files:
-        return 'No file part'
-    
-    file = request.files['file']
-    
-    if file.filename == '':
-        return 'No selected file'
-
-    if file:
-        image_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-        file.save(image_path)
-        extracted_text = extract_text(image_path)
-        return render_template('index.html', extracted_text=extracted_text)
-
-def extract_text(image_path):
-    # Use pytesseract to extract text from the image
-    text = pytesseract.image_to_string(Image.open(image_path))
-    return text
+@app.route('/result')
+def result():
+    extracted_text = request.args.get('extracted_text', '')
+    return render_template('result.html', extracted_text=extracted_text)
 
 if __name__ == '__main__':
     app.run(debug=True)
